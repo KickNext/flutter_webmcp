@@ -1,0 +1,23 @@
+name: flutter_webmcp
+description: A typed Dart API for exposing Flutter Web actions as WebMCP tools.
+version: 0.2.0
+repository: https://github.com/KickNext/flutter_webmcp
+issue_tracker: https://github.com/KickNext/flutter_webmcp/issues
+topics:
+  - webmcp
+  - mcp
+  - flutter-web
+  - ai-agents
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  lints: ^5.1.1
+  test: ^1.25.0

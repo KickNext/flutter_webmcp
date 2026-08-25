@@ -1,0 +1,9 @@
+.dart_tool/
+.github/
+.idea/
+.vscode/
+build/
+coverage/
+doc/
+pubspec.lock
+*.iml
