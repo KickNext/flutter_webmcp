@@ -2,6 +2,9 @@
 
 Thanks for helping improve `flutter_webmcp`.
 
+Participation is governed by the project's
+[`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
+
 ## Before opening a change
 
 1. Discuss large API changes in an issue first. WebMCP is still a draft, so

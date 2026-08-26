@@ -1,0 +1,41 @@
+name: Feature request
+description: Propose an API or behavior improvement.
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What developer problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API or behavior
+      description: Include a small usage example when possible.
+      render: dart
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: true
+  - type: input
+    id: specification
+    attributes:
+      label: Related WebMCP specification or issue
+      placeholder: https://github.com/webmachinelearning/webmcp/issues/…
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and discussions for similar proposals.
+          required: true
+        - label: I understand that WebMCP is experimental and compatibility matters.
+          required: true

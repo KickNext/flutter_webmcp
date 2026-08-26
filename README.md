@@ -189,3 +189,13 @@ browser. For local Chrome testing, enable
 - Android, iOS, macOS, Windows, Linux, and Dart VM report unsupported.
 
 See the complete application in [`example/lib/main.dart`](example/lib/main.dart).
+
+## Contributing
+
+Issues and pull requests are welcome. Read [`CONTRIBUTING.md`](CONTRIBUTING.md)
+and follow the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md). Report security
+issues privately as described in [`SECURITY.md`](SECURITY.md).
+
+## License
+
+`flutter_webmcp` is available under the [MIT License](LICENSE).

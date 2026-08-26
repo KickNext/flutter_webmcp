@@ -1,0 +1,73 @@
+name: Bug report
+description: Report reproducible incorrect behavior in flutter_webmcp.
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve flutter_webmcp. Do not include secrets or personal data.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the actual and expected behavior.
+      placeholder: I expected… Instead…
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Provide a small code sample or a public repository.
+      render: dart
+    validations:
+      required: true
+  - type: input
+    id: package-version
+    attributes:
+      label: flutter_webmcp version
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: input
+    id: flutter-version
+    attributes:
+      label: Flutter version
+      description: Output of `flutter --version`.
+    validations:
+      required: true
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser and version
+      placeholder: Chrome 150
+    validations:
+      required: true
+  - type: dropdown
+    id: compiler
+    attributes:
+      label: Flutter Web compiler
+      options:
+        - JavaScript
+        - WebAssembly
+        - Both
+        - Not applicable
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Redact tokens, user data, and other secrets.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for duplicates.
+          required: true
+        - label: This report does not contain credentials or private data.
+          required: true
