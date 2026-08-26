@@ -1,6 +1,7 @@
 # flutter_webmcp
 
 [![CI](https://github.com/KickNext/flutter_webmcp/actions/workflows/ci.yml/badge.svg)](https://github.com/KickNext/flutter_webmcp/actions/workflows/ci.yml)
+[![pub package](https://img.shields.io/pub/v/flutter_webmcp.svg)](https://pub.dev/packages/flutter_webmcp)
 [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Expose Flutter Web application actions as typed
@@ -9,6 +10,8 @@ JavaScript interop code.
 
 WebMCP is experimental. This package keeps the changing browser bindings behind
 a small Dart API and adds Flutter lifecycle management on top.
+
+Try the [live Flutter Web demo](https://kicknext.github.io/flutter_webmcp/).
 
 ## Compatibility
 
