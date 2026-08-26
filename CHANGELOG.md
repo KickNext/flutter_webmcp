@@ -1,3 +1,12 @@
+## 0.2.1
+
+- Aligned the browser bindings and compatibility tests with the WebMCP Draft
+  Community Group Report dated 26 August 2026.
+- Expanded browser regression coverage for the current tool definition,
+  annotations, registration options, and execution cancellation shape.
+- Tolerate experimental browser builds where `registerTool` returns
+  synchronously instead of returning the draft's `Promise<void>`.
+
 ## 0.2.0
 
 - Added `WebMcpToolScope` for automatic Flutter lifecycle management.

@@ -52,7 +52,10 @@ abstract final class WebMcp {
       final uri = Uri.tryParse(origin);
       if (uri == null || !uri.hasScheme || !uri.hasAuthority) {
         throw ArgumentError.value(
-            origin, 'exposedTo', 'Expected an origin URL.');
+          origin,
+          'exposedTo',
+          'Expected an origin URL.',
+        );
       }
     }
     try {
