@@ -47,5 +47,11 @@ jobs:
         working-directory: example
         run: flutter build web --wasm --release
 
+      - name: Install pana
+        run: dart pub global activate pana 0.23.18
+
+      - name: Check pub.dev score
+        run: dart pub global run pana . --exit-code-threshold 0
+
       - name: Validate publish archive
         run: flutter pub publish --dry-run
