@@ -21,15 +21,21 @@ Try the [live Flutter Web demo](https://kicknext.github.io/flutter_webmcp/).
 | Flutter Web (WebAssembly) | Supported when the browser exposes WebMCP |
 | Android, iOS, desktop, and Dart VM | Safe no-op detection; registration is unsupported |
 
-The package follows the WebMCP Draft Community Group Report. Because that API
-is not yet a web standard, minor package releases may add compatibility shims
-for browser changes.
+The package is tested against the WebMCP Draft Community Group Report dated
+26 August 2026. It implements the current `document.modelContext.registerTool`
+shape, execution cancellation through `AbortSignal`, signal-based
+unregistration, tool annotations, and `exposedTo` origins. Because WebMCP is
+not yet a web standard, minor package releases may add compatibility shims for
+browser changes.
+
+Some experimental Chromium builds return `undefined` from `registerTool`
+instead of the draft's `Promise<void>`. Both forms are supported.
 
 ## Install
 
 ```yaml
 dependencies:
-  flutter_webmcp: ^0.2.0
+  flutter_webmcp: ^0.2.1
 ```
 
 For a local checkout:

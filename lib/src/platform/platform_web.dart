@@ -74,7 +74,10 @@ final class _BrowserWebMcpPlatform implements WebMcpPlatform {
     );
 
     try {
-      await modelContext.registerTool(jsTool, options).toDart;
+      final result = modelContext.registerTool(jsTool, options);
+      if (result.isDefinedAndNotNull && result.isA<JSPromise<JSAny?>>()) {
+        await (result as JSPromise<JSAny?>).toDart;
+      }
     } catch (error) {
       throw WebMcpException('Could not register tool `${tool.name}`.', error);
     }
@@ -157,7 +160,7 @@ extension type _Document._(JSObject _) implements JSObject {
 }
 
 extension type _ModelContext._(JSObject _) implements JSObject {
-  external JSPromise<JSAny?> registerTool(
+  external JSAny? registerTool(
     _ModelContextTool tool, [
     _RegisterOptions options,
   ]);
