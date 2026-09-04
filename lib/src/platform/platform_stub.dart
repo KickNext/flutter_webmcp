@@ -1,4 +1,4 @@
-import '../webmcp_registration.dart';
+import '../webmcp_registration_attempt.dart';
 import '../webmcp_support.dart';
 import '../webmcp_tool.dart';
 import 'platform.dart';
@@ -16,9 +16,9 @@ final class _UnsupportedWebMcpPlatform implements WebMcpPlatform {
       );
 
   @override
-  Future<WebMcpRegistration> registerTool(
+  WebMcpRegistrationAttempt startToolRegistration(
     WebMcpTool tool, {
-    List<String> exposedTo = const [],
+    required List<String> exposedTo,
   }) {
     throw UnsupportedError(
       'WebMCP is only available in a supported web browser.',

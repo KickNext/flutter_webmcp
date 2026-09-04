@@ -4,6 +4,7 @@ import 'platform/platform.dart';
 import 'platform/platform_stub.dart'
     if (dart.library.js_interop) 'platform/platform_web.dart';
 import 'webmcp_registration.dart';
+import 'webmcp_registration_attempt.dart';
 import 'webmcp_logging.dart';
 import 'webmcp_support.dart';
 import 'webmcp_tool.dart';
@@ -29,8 +30,16 @@ abstract final class WebMcp {
     WebMcpTool tool, {
     List<String> exposedTo = const [],
   }) {
+    return startToolRegistration(tool, exposedTo: exposedTo).ready;
+  }
+
+  /// Starts registering [tool] and returns a handle that can cancel it.
+  static WebMcpRegistrationAttempt startToolRegistration(
+    WebMcpTool tool, {
+    List<String> exposedTo = const [],
+  }) {
     _validate(tool, exposedTo);
-    return _platform.registerTool(tool, exposedTo: exposedTo);
+    return _platform.startToolRegistration(tool, exposedTo: exposedTo);
   }
 
   static void _validate(WebMcpTool tool, List<String> exposedTo) {

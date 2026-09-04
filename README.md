@@ -35,7 +35,7 @@ instead of the draft's `Promise<void>`. Both forms are supported.
 
 ```yaml
 dependencies:
-  flutter_webmcp: ^0.2.1
+  flutter_webmcp: ^0.3.0
 ```
 
 For a local checkout:
@@ -186,6 +186,24 @@ import 'package:flutter_webmcp/webmcp.dart';
 
 Then call `WebMcp.registerTool()` and keep the returned
 `WebMcpRegistration` for manual cleanup.
+
+To cancel while the browser is still registering the tool, start an attempt
+and keep it for the whole lifecycle:
+
+```dart
+final attempt = WebMcp.startToolRegistration(tool);
+final registration = await attempt.ready;
+
+// When the owner ends. This may also run while `ready` is still pending.
+await attempt.cancel();
+```
+
+Call `cancel()` as soon as the owner ends, even if `ready` has not completed.
+Cancelling a pending attempt makes `ready` complete with a `WebMcpException`.
+
+`WebMcpToolScope` uses this form internally. When a tool changes, its old
+attempt is aborted before the replacement starts; slots whose tool instance
+and exposure configuration did not change stay registered.
 
 ## Browser setup
 

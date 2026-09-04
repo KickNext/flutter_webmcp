@@ -1,4 +1,4 @@
-import '../webmcp_registration.dart';
+import '../webmcp_registration_attempt.dart';
 import '../webmcp_support.dart';
 import '../webmcp_tool.dart';
 
@@ -7,9 +7,9 @@ abstract interface class WebMcpPlatform {
   /// Current WebMCP support state.
   WebMcpSupport get support;
 
-  /// Registers [tool] for the requested origins.
-  Future<WebMcpRegistration> registerTool(
+  /// Starts registering [tool] for the requested origins.
+  WebMcpRegistrationAttempt startToolRegistration(
     WebMcpTool tool, {
-    List<String> exposedTo,
+    required List<String> exposedTo,
   });
 }

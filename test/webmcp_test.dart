@@ -78,6 +78,23 @@ void main() {
     expect(registration.isRegistered, isFalse);
   });
 
+  test('registration attempt cancels once', () async {
+    var calls = 0;
+    final registration = WebMcpRegistration('test', () => calls++);
+    final attempt = WebMcpRegistrationAttempt(
+      ready: Future.value(registration),
+      cancel: () => calls += 100,
+    );
+
+    await attempt.ready;
+    await attempt.cancel();
+    await attempt.cancel();
+
+    expect(calls, 1);
+    expect(attempt.isCancelled, isTrue);
+    expect(registration.isRegistered, isFalse);
+  });
+
   test('typed tool decodes input before execution', () async {
     final typedTool = WebMcpTypedTool<int>(
       name: 'double_value',

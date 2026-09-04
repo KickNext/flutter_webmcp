@@ -195,6 +195,38 @@ void main() {
     await registration.unregister();
   });
 
+  test('aborts a registration while its browser Promise is pending', () async {
+    final completer = Completer<JSAny?>();
+    JSObject? registrationOptions;
+    final fakeModelContext = _FakeModelContext(
+      registerTool: ((JSObject tool, JSObject options) {
+        registrationOptions = options;
+        return completer.future.toJS;
+      }).toJS,
+    );
+    _document.setProperty('modelContext'.toJS, fakeModelContext);
+
+    final attempt = WebMcp.startToolRegistration(
+      WebMcpTool(
+        name: 'cancel_pending',
+        description: 'Covers cancellation before registration is ready.',
+        execute: (input, context) => null,
+      ),
+    );
+    final signal = registrationOptions!.getProperty<JSObject>('signal'.toJS);
+    expect(signal.getProperty<JSBoolean>('aborted'.toJS).toDart, isFalse);
+
+    attempt.cancel();
+    expect(signal.getProperty<JSBoolean>('aborted'.toJS).toDart, isTrue);
+
+    final readyExpectation = expectLater(
+      attempt.ready,
+      throwsA(isA<WebMcpException>()),
+    );
+    completer.complete(null);
+    await readyExpectation;
+  });
+
   test('hides unexpected local errors from the agent', () async {
     JSObject? registeredTool;
     final fakeModelContext = _FakeModelContext(
