@@ -7,6 +7,7 @@ import 'dart:js_interop';
 import '../webmcp_exception.dart';
 import '../webmcp_logging.dart';
 import '../webmcp_registration.dart';
+import '../webmcp_registration_attempt.dart';
 import '../webmcp_result.dart';
 import '../webmcp_support.dart';
 import '../webmcp_tool.dart';
@@ -41,10 +42,22 @@ final class _BrowserWebMcpPlatform implements WebMcpPlatform {
   }
 
   @override
-  Future<WebMcpRegistration> registerTool(
+  WebMcpRegistrationAttempt startToolRegistration(
     WebMcpTool tool, {
-    List<String> exposedTo = const [],
-  }) async {
+    required List<String> exposedTo,
+  }) {
+    final controller = _AbortController();
+    return WebMcpRegistrationAttempt(
+      ready: _registerTool(tool, exposedTo, controller),
+      cancel: () => controller.abort(),
+    );
+  }
+
+  Future<WebMcpRegistration> _registerTool(
+    WebMcpTool tool,
+    List<String> exposedTo,
+    _AbortController controller,
+  ) async {
     final modelContext = _modelContext;
     if (modelContext == null) {
       throw const WebMcpException(
@@ -52,7 +65,6 @@ final class _BrowserWebMcpPlatform implements WebMcpPlatform {
       );
     }
 
-    final controller = _AbortController();
     final annotations = tool.annotations;
     final jsTool = _ModelContextTool(
       name: tool.name,
@@ -79,7 +91,19 @@ final class _BrowserWebMcpPlatform implements WebMcpPlatform {
         await (result as JSPromise<JSAny?>).toDart;
       }
     } catch (error) {
+      if (controller.signal.aborted) {
+        throw WebMcpException(
+          'Registration of tool `${tool.name}` was cancelled.',
+          error,
+        );
+      }
       throw WebMcpException('Could not register tool `${tool.name}`.', error);
+    }
+
+    if (controller.signal.aborted) {
+      throw WebMcpException(
+        'Registration of tool `${tool.name}` was cancelled.',
+      );
     }
 
     return WebMcpRegistration(tool.name, () => controller.abort());

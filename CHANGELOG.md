@@ -1,3 +1,11 @@
+## 0.3.0 - 2026-09-04
+
+- Added cancellable registration attempts so Flutter scopes can abort stale
+  browser registrations before starting replacements.
+- Replaced the asynchronous `WebMcpToolRegistrar` override with the cancellable
+  `WebMcpToolRegistrationStarter` contract.
+- Reconciled scoped tools independently by name.
+
 ## 0.2.1
 
 - Aligned the browser bindings and compatibility tests with the WebMCP Draft

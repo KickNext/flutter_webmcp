@@ -1,37 +1,41 @@
 @TestOn('vm')
 library;
 
+import 'dart:async';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_webmcp/flutter_webmcp.dart';
 
 void main() {
-  testWidgets('registers tools while mounted and unregisters on dispose', (
+  WebMcpTool tool(String name, {String? description}) => WebMcpTool(
+        name: name,
+        description: description ?? 'Tool $name.',
+        execute: (input, context) => null,
+      );
+
+  testWidgets('registers tools while mounted and cancels them on dispose', (
     tester,
   ) async {
-    final registered = <String>[];
-    final unregistered = <String>[];
-    final tool = WebMcpTool(
-      name: 'test_tool',
-      description: 'A test tool.',
-      execute: (input, context) => null,
-    );
+    final events = <String>[];
 
-    Future<WebMcpRegistration> registrar(
+    WebMcpRegistrationAttempt starter(
       WebMcpTool tool, {
       List<String> exposedTo = const [],
-    }) async {
-      registered.add(tool.name);
-      return WebMcpRegistration(
-        tool.name,
-        () => unregistered.add(tool.name),
+    }) {
+      events.add('start:${tool.name}');
+      void cancel() => events.add('cancel:${tool.name}');
+
+      return WebMcpRegistrationAttempt(
+        ready: Future.value(WebMcpRegistration(tool.name, cancel)),
+        cancel: cancel,
       );
     }
 
     await tester.pumpWidget(
       WebMcpToolScope(
-        tools: [tool],
-        registrar: registrar,
+        tools: [tool('test_tool')],
+        registrationStarter: starter,
         supportCheck: () => true,
         child: const Directionality(
           textDirection: TextDirection.ltr,
@@ -42,141 +46,296 @@ void main() {
     await tester.pump();
 
     expect(find.text('Child'), findsOneWidget);
-    expect(registered, ['test_tool']);
-    expect(unregistered, isEmpty);
+    expect(events, ['start:test_tool']);
 
     await tester.pumpWidget(const SizedBox.shrink());
-    await tester.pump();
 
-    expect(unregistered, ['test_tool']);
+    expect(events, ['start:test_tool', 'cancel:test_tool']);
   });
 
-  testWidgets('replaces tools when configuration changes', (tester) async {
+  testWidgets('cancels a pending version before starting its replacement', (
+    tester,
+  ) async {
     final events = <String>[];
+    final errors = <Object>[];
+    final pending = Completer<WebMcpRegistration>();
+    var starts = 0;
 
-    Future<WebMcpRegistration> registrar(
+    WebMcpRegistrationAttempt starter(
       WebMcpTool tool, {
       List<String> exposedTo = const [],
-    }) async {
-      events.add('register:${tool.name}');
-      return WebMcpRegistration(
-        tool.name,
-        () => events.add('unregister:${tool.name}'),
+    }) {
+      starts++;
+      final version = starts;
+      events.add('start:$version');
+      return WebMcpRegistrationAttempt(
+        ready: version == 1
+            ? pending.future
+            : Future.value(WebMcpRegistration(tool.name, () {
+                events.add('cancel:$version');
+                if (version == 2) throw StateError('active cleanup failed');
+              })),
+        cancel: () {
+          events.add('cancel:$version');
+        },
       );
     }
 
-    WebMcpTool tool(String name) => WebMcpTool(
-          name: name,
-          description: 'Tool $name.',
-          execute: (input, context) => null,
-        );
+    await tester.pumpWidget(
+      WebMcpToolScope(
+        tools: [tool('same_name', description: 'First version.')],
+        registrationStarter: starter,
+        supportCheck: () => true,
+        onError: (error, stackTrace) => errors.add(error),
+        child: const SizedBox(),
+      ),
+    );
+    await tester.pumpWidget(
+      WebMcpToolScope(
+        tools: [tool('same_name', description: 'Second version.')],
+        registrationStarter: starter,
+        supportCheck: () => true,
+        onError: (error, stackTrace) => errors.add(error),
+        child: const SizedBox(),
+      ),
+    );
+
+    expect(events, ['start:1', 'cancel:1', 'start:2']);
+    expect(errors, isEmpty);
+
+    pending.completeError(const WebMcpException('Registration cancelled.'));
+    await tester.pump();
+    expect(events, ['start:1', 'cancel:1', 'start:2']);
+    expect(errors, isEmpty);
 
     await tester.pumpWidget(
       WebMcpToolScope(
-        tools: [tool('first')],
-        registrar: registrar,
+        tools: [tool('same_name', description: 'Third version.')],
+        registrationStarter: starter,
         supportCheck: () => true,
+        onError: (error, stackTrace) => errors.add(error),
         child: const SizedBox(),
       ),
     );
     await tester.pump();
+
+    expect(events, [
+      'start:1',
+      'cancel:1',
+      'start:2',
+      'cancel:2',
+      'start:3',
+    ]);
+    expect(errors.single, isA<StateError>());
+  });
+
+  testWidgets('keeps unchanged names active while other names change', (
+    tester,
+  ) async {
+    final events = <String>[];
+
+    WebMcpRegistrationAttempt starter(
+      WebMcpTool tool, {
+      List<String> exposedTo = const [],
+    }) {
+      events.add('start:${tool.name}');
+      void cancel() => events.add('cancel:${tool.name}');
+
+      return WebMcpRegistrationAttempt(
+        ready: Future.value(WebMcpRegistration(tool.name, cancel)),
+        cancel: cancel,
+      );
+    }
+
+    final stable = tool('stable');
     await tester.pumpWidget(
       WebMcpToolScope(
-        tools: [tool('second')],
-        registrar: registrar,
+        tools: [stable, tool('old')],
+        registrationStarter: starter,
         supportCheck: () => true,
         child: const SizedBox(),
       ),
     );
-    await tester.pump();
+    await tester.pumpWidget(
+      WebMcpToolScope(
+        tools: [stable, tool('new')],
+        registrationStarter: starter,
+        supportCheck: () => true,
+        child: const SizedBox(),
+      ),
+    );
 
     expect(
       events,
-      ['register:first', 'unregister:first', 'register:second'],
+      ['start:stable', 'start:old', 'cancel:old', 'start:new'],
     );
   });
 
-  testWidgets('does not register when disabled or unsupported', (tester) async {
-    var registrations = 0;
-    final tool = WebMcpTool(
-      name: 'test_tool',
-      description: 'A test tool.',
-      execute: (input, context) => null,
-    );
-
-    Future<WebMcpRegistration> registrar(
-      WebMcpTool tool, {
-      List<String> exposedTo = const [],
-    }) async {
-      registrations++;
-      return WebMcpRegistration(tool.name, () {});
-    }
-
-    await tester.pumpWidget(
-      WebMcpToolScope(
-        tools: [tool],
-        enabled: false,
-        registrar: registrar,
-        supportCheck: () => true,
-        child: const SizedBox(),
-      ),
-    );
-    await tester.pump();
-    expect(registrations, 0);
-
-    await tester.pumpWidget(
-      WebMcpToolScope(
-        tools: [tool],
-        registrar: registrar,
-        supportCheck: () => false,
-        child: const SizedBox(),
-      ),
-    );
-    await tester.pump();
-    expect(registrations, 0);
-  });
-
-  testWidgets('cleans up partial registration and reports the error', (
+  testWidgets('reports registration errors without cancelling other names', (
     tester,
   ) async {
-    final unregistered = <String>[];
-    Object? reportedError;
-    final tools = [
-      WebMcpTool(
-        name: 'first',
-        description: 'First tool.',
-        execute: (input, context) => null,
-      ),
-      WebMcpTool(
-        name: 'second',
-        description: 'Second tool.',
-        execute: (input, context) => null,
-      ),
-    ];
+    final errors = <Object>[];
+    final events = <String>[];
 
-    Future<WebMcpRegistration> registrar(
+    WebMcpRegistrationAttempt starter(
       WebMcpTool tool, {
       List<String> exposedTo = const [],
-    }) async {
-      if (tool.name == 'second') throw StateError('registration failed');
-      return WebMcpRegistration(
-        tool.name,
-        () => unregistered.add(tool.name),
+    }) {
+      events.add('start:${tool.name}');
+      return WebMcpRegistrationAttempt(
+        ready: tool.name == 'broken'
+            ? Future.error(StateError('registration failed'))
+            : Future.value(WebMcpRegistration(tool.name, () {})),
+        cancel: () => events.add('cancel:${tool.name}'),
       );
     }
 
     await tester.pumpWidget(
       WebMcpToolScope(
-        tools: tools,
-        registrar: registrar,
+        tools: [tool('working'), tool('broken')],
+        registrationStarter: starter,
         supportCheck: () => true,
-        onError: (error, stackTrace) => reportedError = error,
+        onError: (error, stackTrace) => errors.add(error),
         child: const SizedBox(),
       ),
     );
     await tester.pump();
 
-    expect(unregistered, ['first']);
-    expect(reportedError, isA<StateError>());
+    expect(events, ['start:working', 'start:broken']);
+    expect(errors.single, isA<StateError>());
+  });
+
+  testWidgets('reports synchronous errors after the build phase', (
+    tester,
+  ) async {
+    var errorCount = 0;
+    late StateSetter setParentState;
+    final duplicate = tool('duplicate');
+    final tools = [duplicate, duplicate];
+
+    WebMcpRegistrationAttempt starter(
+      WebMcpTool tool, {
+      List<String> exposedTo = const [],
+    }) =>
+        WebMcpRegistrationAttempt(
+          ready: Future.value(WebMcpRegistration(tool.name, () {})),
+          cancel: () {},
+        );
+
+    await tester.pumpWidget(
+      StatefulBuilder(
+        builder: (context, setState) {
+          setParentState = setState;
+          return WebMcpToolScope(
+            tools: tools,
+            registrationStarter: starter,
+            supportCheck: _supported,
+            onError: (error, stackTrace) {
+              errorCount++;
+              setParentState(() {});
+            },
+            child: const SizedBox(),
+          );
+        },
+      ),
+    );
+    await tester.pump();
+
+    expect(errorCount, 1);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('disabling cancels without checking support', (tester) async {
+    var starts = 0;
+    var cancels = 0;
+    final testTool = tool('test_tool');
+
+    WebMcpRegistrationAttempt starter(
+      WebMcpTool tool, {
+      List<String> exposedTo = const [],
+    }) {
+      starts++;
+      void cancel() => cancels++;
+
+      return WebMcpRegistrationAttempt(
+        ready: Future.value(WebMcpRegistration(tool.name, cancel)),
+        cancel: cancel,
+      );
+    }
+
+    await tester.pumpWidget(
+      WebMcpToolScope(
+        tools: [testTool],
+        registrationStarter: starter,
+        supportCheck: () => true,
+        child: const SizedBox(),
+      ),
+    );
+    await tester.pumpWidget(
+      WebMcpToolScope(
+        tools: [testTool],
+        enabled: false,
+        registrationStarter: starter,
+        supportCheck: () => throw StateError('must not be called'),
+        child: const SizedBox(),
+      ),
+    );
+
+    expect(starts, 1);
+    expect(cancels, 1);
+  });
+
+  testWidgets('dispose cancels every slot before reporting errors', (
+    tester,
+  ) async {
+    var showScope = true;
+    var errors = 0;
+    late StateSetter setParentState;
+    final cancelled = <String>[];
+
+    WebMcpRegistrationAttempt starter(
+      WebMcpTool tool, {
+      List<String> exposedTo = const [],
+    }) {
+      void cancel() {
+        cancelled.add(tool.name);
+        throw StateError('cancel failed');
+      }
+
+      return WebMcpRegistrationAttempt(
+        ready: Future.value(WebMcpRegistration(tool.name, cancel)),
+        cancel: cancel,
+      );
+    }
+
+    await tester.pumpWidget(
+      StatefulBuilder(
+        builder: (context, setState) {
+          setParentState = setState;
+          return showScope
+              ? WebMcpToolScope(
+                  tools: [tool('first'), tool('second')],
+                  registrationStarter: starter,
+                  supportCheck: _supported,
+                  onError: (error, stackTrace) {
+                    errors++;
+                    setParentState(() {});
+                  },
+                  child: const SizedBox(),
+                )
+              : const SizedBox();
+        },
+      ),
+    );
+
+    setParentState(() => showScope = false);
+    await tester.pump();
+    await tester.pump();
+
+    expect(cancelled, ['first', 'second']);
+    expect(errors, 2);
+    expect(tester.takeException(), isNull);
   });
 }
+
+bool _supported() => true;
