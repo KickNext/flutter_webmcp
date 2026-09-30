@@ -22,6 +22,7 @@ dart format --output=none --set-exit-if-changed lib test example/lib
 flutter analyze
 flutter test
 dart test -p chrome test/webmcp_browser_test.dart
+DART_TEST_CONFIG=test/native_browser_config.yaml dart test -p chrome test/webmcp_native_browser_test.dart
 flutter analyze example
 (cd example && flutter build web --release)
 (cd example && flutter build web --wasm --release)
@@ -30,6 +31,17 @@ flutter pub publish --dry-run
 
 Chrome browser tests require a Chrome installation. Manual WebMCP testing may
 also require `chrome://flags/#enable-webmcp-testing`.
+
+`webmcp_browser_test.dart` verifies the Dart bindings with controlled browser
+fixtures. `webmcp_native_browser_test.dart` additionally checks actual browser
+activation, cancellation ordering, and iframe ownership when the native API
+is present. It explicitly skips on browsers without the lifecycle API; a skip
+does not establish native WebMCP conformance.
+The separate native browser config enables experimental Chromium features in
+the test browser only. In PowerShell, set `$env:DART_TEST_CONFIG` to the config
+path for this command, then remove it with `Remove-Item Env:DART_TEST_CONFIG`.
+Run binding fixtures without this config, so native read-only
+properties do not interfere with their controlled ModelContext fixtures.
 
 ## Pull requests
 

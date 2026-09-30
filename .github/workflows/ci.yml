@@ -36,6 +36,11 @@ jobs:
       - name: Run browser tests
         run: dart test -p chrome test/webmcp_browser_test.dart
 
+      - name: Run native WebMCP tests when available
+        env:
+          DART_TEST_CONFIG: test/native_browser_config.yaml
+        run: dart test -p chrome test/webmcp_native_browser_test.dart
+
       - name: Analyze example
         run: flutter analyze example
 

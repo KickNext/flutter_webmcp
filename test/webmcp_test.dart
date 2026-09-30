@@ -19,6 +19,11 @@ void main() {
 
   test('reports unsupported outside a browser', () {
     expect(WebMcp.isSupported, isFalse);
+    expect(WebMcp.isLifecycleEventsSupported, isFalse);
+  });
+
+  test('lifecycle events are empty outside a browser', () async {
+    expect(await WebMcp.lifecycleEvents.toList(), isEmpty);
   });
 
   test('rejects an invalid tool name before platform access', () {

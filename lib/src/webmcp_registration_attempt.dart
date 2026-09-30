@@ -28,6 +28,8 @@ final class WebMcpRegistrationAttempt {
 
   /// Cancels this attempt or removes its active registration.
   ///
+  /// This controls tool availability, not cancellation of executing handlers.
+  ///
   /// Cancellation starts immediately. The returned future reflects completion
   /// of any adapter-specific asynchronous cleanup.
   Future<void> cancel() {

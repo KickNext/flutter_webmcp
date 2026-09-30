@@ -8,6 +8,7 @@ import 'webmcp_registration_attempt.dart';
 import 'webmcp_logging.dart';
 import 'webmcp_support.dart';
 import 'webmcp_tool.dart';
+import 'webmcp_lifecycle_event.dart';
 
 /// Entry point for WebMCP feature detection and tool registration.
 abstract final class WebMcp {
@@ -18,6 +19,24 @@ abstract final class WebMcp {
 
   /// Detailed feature-detection result for the current page.
   static WebMcpSupport get support => _platform.support;
+
+  /// Whether the browser exposes both ModelContext lifecycle event handlers.
+  ///
+  /// Older browsers may support registration without these events.
+  static bool get isLifecycleEventsSupported =>
+      _platform.isLifecycleEventsSupported;
+
+  /// Activation and cancellation notifications for this document's tools.
+  ///
+  /// Each access creates a broadcast stream bound to the current ModelContext.
+  /// Native listeners attach on the first subscription and detach when the last
+  /// subscription is cancelled. Events are not buffered without listeners.
+  /// Unsupported runtimes return an empty stream.
+  ///
+  /// Cancel subscriptions when their owner ends. Events contain no invocation
+  /// ID; use [WebMcpExecutionContext.isCancelled] inside individual handlers.
+  static Stream<WebMcpLifecycleEvent> get lifecycleEvents =>
+      _platform.lifecycleEvents;
 
   /// Receives completed tool calls for debugging and observability.
   static set logger(WebMcpLogger? value) => webMcpLogger = value;
