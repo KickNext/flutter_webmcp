@@ -46,6 +46,8 @@ jobs:
           # Ubuntu restricts user namespaces for downloaded Chrome binaries.
           # Use the installed Chrome sandbox helper as Chromium recommends.
           test -x /opt/google/chrome/chrome-sandbox
+          sudo chown root:root /opt/google/chrome/chrome-sandbox
+          sudo chmod 4755 /opt/google/chrome/chrome-sandbox
           echo "CHROME_DEVEL_SANDBOX=/opt/google/chrome/chrome-sandbox" >> "$GITHUB_ENV"
 
       - name: Check native lifecycle and HTTP Permissions Policy
