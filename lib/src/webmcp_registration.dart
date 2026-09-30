@@ -15,6 +15,8 @@ final class WebMcpRegistration {
   bool get isRegistered => _isRegistered;
 
   /// Removes the tool. Calling this more than once has no effect.
+  ///
+  /// Prevents new calls; it does not cancel handlers already executing.
   Future<void> unregister() async {
     if (!_isRegistered) return;
     _isRegistered = false;

@@ -1,3 +1,18 @@
+## 0.3.1 - 2026-09-30
+
+- Added `consequential` and `debugging` annotations, preserving explicit false
+  values and omitting null hints.
+- Added typed ModelContext lifecycle events through `WebMcp.lifecycleEvents`
+  and separate feature detection with `WebMcp.isLifecycleEventsSupported`.
+  Native listeners follow stream subscription lifetimes.
+- Added browser regressions for annotations, event ownership and subscription
+  cleanup, and independent registration/execution cancellation.
+- Verified native activation/cancellation in Chrome for Testing 157.0.8079.0.
+  CI requires these events and checks real HTTP Permissions Policy enforcement
+  in documents and same-origin descendants.
+- Updated guidance for the 29 September 2026 draft: tool replacement, document
+  naming, UI state, sensitive inputs, and deployment headers.
+
 ## 0.3.0 - 2026-09-04
 
 - Added cancellable registration attempts so Flutter scopes can abort stale

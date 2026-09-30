@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_webmcp/flutter_webmcp.dart';
 
@@ -31,14 +33,25 @@ class _TaskDemoPageState extends State<TaskDemoPage> {
   final _tasks = <String>['Open this page in a WebMCP browser'];
   late final WebMcpTool _addTaskTool;
   Object? _registrationError;
+  StreamSubscription<WebMcpLifecycleEvent>? _lifecycleSubscription;
 
   @override
   void initState() {
     super.initState();
+    if (WebMcp.isLifecycleEventsSupported) {
+      _lifecycleSubscription = WebMcp.lifecycleEvents.listen((event) {
+        debugPrint('${event.toolName}: ${event.type.name}');
+      });
+    }
     _addTaskTool = WebMcpTypedTool<AddTaskInput>(
       name: 'add_task',
       title: 'Add task',
       description: 'Adds a task to the list visible on this page.',
+      annotations: const WebMcpAnnotations(
+        readOnly: false,
+        consequential: false,
+        debugging: false,
+      ),
       inputSchema: const {
         'type': 'object',
         'properties': {
@@ -57,7 +70,13 @@ class _TaskDemoPageState extends State<TaskDemoPage> {
             message: 'Task creation was cancelled.',
           );
         }
-        if (mounted) setState(() => _tasks.add(input.title));
+        if (!mounted) {
+          throw const WebMcpToolException(
+            code: 'page_unavailable',
+            message: 'The task list is no longer available.',
+          );
+        }
+        setState(() => _tasks.add(input.title));
         return WebMcpResult.text('Task "${input.title}" was added.');
       },
     );
@@ -80,6 +99,8 @@ class _TaskDemoPageState extends State<TaskDemoPage> {
 
   @override
   void dispose() {
+    final subscription = _lifecycleSubscription;
+    if (subscription != null) unawaited(subscription.cancel());
     _controller.dispose();
     super.dispose();
   }

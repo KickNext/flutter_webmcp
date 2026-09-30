@@ -26,6 +26,8 @@ final class WebMcpExecutionContext {
   final bool Function() _isCancelled;
 
   /// Whether the browser agent cancelled this invocation.
+  ///
+  /// Unregistering the tool or disposing its scope does not cancel invocation.
   bool get isCancelled => _isCancelled();
 }
 

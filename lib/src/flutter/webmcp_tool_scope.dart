@@ -12,6 +12,9 @@ typedef WebMcpToolRegistrationStarter = WebMcpRegistrationAttempt Function(
 });
 
 /// Registers [tools] while [child] is mounted.
+///
+/// Disposal and replacement prevent new calls but do not cancel executing
+/// handlers. Guard widget-bound work with the application's own lifetime state.
 class WebMcpToolScope extends StatefulWidget {
   /// Creates a lifecycle scope for [tools].
   const WebMcpToolScope({
