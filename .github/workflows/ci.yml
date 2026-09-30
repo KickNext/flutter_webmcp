@@ -25,7 +25,7 @@ jobs:
         run: flutter pub get
 
       - name: Check formatting
-        run: dart format --output=none --set-exit-if-changed lib test example/lib
+        run: dart format --output=none --set-exit-if-changed lib test tool example/lib
 
       - name: Analyze package
         run: flutter analyze
@@ -36,10 +36,16 @@ jobs:
       - name: Run browser tests
         run: dart test -p chrome test/webmcp_browser_test.dart
 
-      - name: Run native WebMCP tests when available
-        env:
-          DART_TEST_CONFIG: test/native_browser_config.yaml
-        run: dart test -p chrome test/webmcp_native_browser_test.dart
+      - name: Install Chrome with native WebMCP lifecycle events
+        run: |
+          curl --fail --location --retry 3 \
+            https://storage.googleapis.com/chrome-for-testing-public/157.0.8079.0/linux64/chrome-linux64.zip \
+            --output "$RUNNER_TEMP/webmcp-chrome.zip"
+          unzip -q "$RUNNER_TEMP/webmcp-chrome.zip" -d "$RUNNER_TEMP/webmcp-chrome"
+          echo "CHROME_EXECUTABLE=$RUNNER_TEMP/webmcp-chrome/chrome-linux64/chrome" >> "$GITHUB_ENV"
+
+      - name: Check native lifecycle and HTTP Permissions Policy
+        run: dart run tool/check_native_browser.dart
 
       - name: Analyze example
         run: flutter analyze example

@@ -18,11 +18,11 @@ Participation is governed by the project's
 Run these commands from the package root:
 
 ```sh
-dart format --output=none --set-exit-if-changed lib test example/lib
+dart format --output=none --set-exit-if-changed lib test tool example/lib
 flutter analyze
 flutter test
 dart test -p chrome test/webmcp_browser_test.dart
-DART_TEST_CONFIG=test/native_browser_config.yaml dart test -p chrome test/webmcp_native_browser_test.dart
+CHROME_EXECUTABLE=/path/to/canary/chrome dart run tool/check_native_browser.dart
 flutter analyze example
 (cd example && flutter build web --release)
 (cd example && flutter build web --wasm --release)
@@ -35,13 +35,22 @@ also require `chrome://flags/#enable-webmcp-testing`.
 `webmcp_browser_test.dart` verifies the Dart bindings with controlled browser
 fixtures. `webmcp_native_browser_test.dart` additionally checks actual browser
 activation, cancellation ordering, and iframe ownership when the native API
-is present. It explicitly skips on browsers without the lifecycle API; a skip
-does not establish native WebMCP conformance.
-The separate native browser config enables experimental Chromium features in
-the test browser only. In PowerShell, set `$env:DART_TEST_CONFIG` to the config
-path for this command, then remove it with `Remove-Item Env:DART_TEST_CONFIG`.
+is present. This suite fails when the native lifecycle API is absent. Use a
+recent Chrome Canary (CI pins Chrome for Testing 157.0.8079.0), setting
+`CHROME_EXECUTABLE` to its executable path. Stable Chrome may expose registration
+without the newer lifecycle events.
+The native runner enables experimental Chromium features in the test browser
+only. In PowerShell, set `$env:CHROME_EXECUTABLE` to the executable path for
+this command, then remove it with `Remove-Item Env:CHROME_EXECUTABLE`.
 Run binding fixtures without this config, so native read-only
 properties do not interfere with their controlled ModelContext fixtures.
+
+`check_native_browser.dart` also serves the compiled Dart bindings with actual HTTP
+headers and verifies both allowed registration and `NotAllowedError` under
+`Permissions-Policy: tools=()`, including inherited denial in same-origin
+descendants. It uses isolated temporary Chrome profiles and requires native
+WebMCP support. Pass `--serve` to inspect the printed fixture URLs in the in-app
+browser or another browser manually.
 
 ## Pull requests
 

@@ -16,6 +16,13 @@ void main() {
       context.getProperty<JSAny?>('getTools'.toJS).isA<JSFunction>() &&
       context.getProperty<JSAny?>('executeTool'.toJS).isA<JSFunction>();
 
+  test('native lifecycle API is available', () {
+    expect(available, isTrue,
+        reason: 'Use a recent Chrome Canary with WebMCP testing enabled. '
+            '${_navigator.getProperty<JSString>("userAgent".toJS).toDart}');
+  });
+  if (!available) return;
+
   test('native iframe invocation notifies the owner and cancels independently',
       () async {
     final frame =
@@ -65,8 +72,7 @@ void main() {
       },
     ));
     addTearDown(registration.unregister);
-    final tools =
-        (await _NativeModelContext(context!).getTools().toDart).toDart;
+    final tools = (await _NativeModelContext(context).getTools().toDart).toDart;
     final tool = tools.singleWhere(
         (tool) => tool.getProperty<JSString>('name'.toJS).toDart == name);
     final executionController = _NativeAbortController();
@@ -97,11 +103,14 @@ void main() {
     expect(callerEvents, 0);
     expect(order, ['rejected', 'cancel_event']);
     finish.complete();
-  }, skip: available ? false : 'Native WebMCP lifecycle API is unavailable.');
+  });
 }
 
 @JS('document')
 external JSObject get _document;
+
+@JS('navigator')
+external JSObject get _navigator;
 
 extension type _NativeModelContext(JSObject _) implements JSObject {
   external JSPromise<JSArray<JSObject>> getTools();

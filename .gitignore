@@ -7,3 +7,5 @@ pubspec.lock
 *.iml
 .idea/
 .vscode/
+.playwright-cli/
+output/playwright/

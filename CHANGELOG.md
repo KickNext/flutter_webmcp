@@ -7,6 +7,9 @@
   Native listeners follow stream subscription lifetimes.
 - Added browser regressions for annotations, event ownership and subscription
   cleanup, and independent registration/execution cancellation.
+- Verified native activation/cancellation in Chrome for Testing 157.0.8079.0.
+  CI requires these events and checks real HTTP Permissions Policy enforcement
+  in documents and same-origin descendants.
 - Updated guidance for the 29 September 2026 draft: tool replacement, document
   naming, UI state, sensitive inputs, and deployment headers.
 
